@@ -91,6 +91,8 @@ constexpr auto Zmws = "zmws";
 constexpr auto ReportFile = "reportFile";
 constexpr auto NumThreads = "numThreads";
 constexpr auto LogFile = "logFile";
+constexpr auto RefFile = "refFile";
+constexpr auto VariantOuputFile = "variantOutput";
 constexpr auto LogLevel = "logLevel";
 }  // namespace OptionNames
 }  // namespace CCS
@@ -325,7 +327,8 @@ int main(int argc, char** argv)
 {
     using boost::algorithm::join;
     using boost::make_optional;
-
+    using PacBio::Variant::VariantCaller;
+    
     SetColumns();
 
     // args and options
@@ -371,7 +374,13 @@ int main(int argc, char** argv)
         .choices(logLevels.begin(), logLevels.end())
         .set_default("INFO")
         .help("Set log level. Default = %default");
-
+    parser.add_option(em + OptionNames::RefFile)
+    .type("string")
+    .set_default("stupid")
+    .help("Where to write the variant call scores. Default = %default");
+    parser.add_option(em + OptionNames::VariantOuputFile)
+    .set_default("variants.csv")
+    .help("Output file for variant information.");
     const auto options = parser.parse_args(argc, argv);
     const auto files = parser.args();
 
@@ -436,6 +445,26 @@ int main(int argc, char** argv)
         }
         Logging::InstallSignalHandlers();
     }
+    
+    // Variant Calling
+    //
+    //
+    VariantCaller* vc;
+    string refName(options.get(OptionNames::RefFile));
+    if (refName != "stupid") {
+        if (!FileExists(refName)) {
+            parser.error("REFERENCE FASTA: file does not exist: '" + refName + "'");
+        }
+        string voutname(options.get(OptionNames::VariantOuputFile));
+        if (FileExists(voutname) && !forceOutput) {
+            parser.error("VARIANT OUTPUT: file already exists: '" + voutname + "'");
+        }
+        vc = new VariantCaller(refName, voutname);
+    } else {
+        vc = nullptr;
+    }
+    
+    
 
     // start processing chunks!
     //
@@ -532,7 +561,7 @@ int main(int argc, char** argv)
                 skipZmw = false;
                 chunk->emplace_back(Chunk{ReadId(movieNames[movieName], *holeNumber),
                                           vector<Subread>(), SNR(snr[0], snr[1], snr[2], snr[3]),
-                                          read.ReadGroup().SequencingChemistry(), barcodes});
+                                          read.ReadGroup().SequencingChemistry(), barcodes, vc});
             }
         }
 
@@ -583,6 +612,9 @@ int main(int argc, char** argv)
         ofstream stream(reportFile);
         WriteResultsReport(stream, counts);
     }
-
+    // Clean up
+    if (vc != nullptr) {
+        delete vc;
+    }
     return 0;
 }

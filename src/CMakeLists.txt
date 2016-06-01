@@ -7,6 +7,7 @@ include_directories(SYSTEM
     ${PBBAM_INCLUDE_DIRS}
     ${CPPOPTPARSE_IncludeDir}
     ${SEQAN_INCLUDE_DIRS}
+    ${MonoVC_INCLUDE_DIRS}
 )
 
 # flags
@@ -41,7 +42,8 @@ target_link_libraries(ccs
     ${HTSLIB_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${CMAKE_DL_LIBS}
+    ${CMAKE_DL_LIBS} 
+    ${MonoVC_INCLUDE_DIRS}/../build/libVariantCaller.dylib
 )
 
 # gperftools support

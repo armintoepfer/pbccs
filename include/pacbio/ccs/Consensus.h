@@ -65,6 +65,8 @@
 #include <pacbio/ccs/SubreadResultCounter.h>
 #include <pacbio/ccs/Timer.h>
 
+#include <pacbio/variant/VariantCaller.h>
+
 namespace PacBio {
 namespace CCS {
 
@@ -181,6 +183,7 @@ struct ChunkType
     SNR SignalToNoise;
     std::string Chemistry;
     boost::optional<std::tuple<int16_t, int16_t, uint8_t>> Barcodes;
+    PacBio::Variant::VariantCaller* Caller;
 };
 
 struct ConsensusType
@@ -651,6 +654,12 @@ ResultType<ConsensusType> Consensus(std::unique_ptr<std::vector<TChunk>>& chunks
                             zAvg, zScores, result.SubreadCounter.ReturnCountsAsArray(), nTested,
                             nApplied, chunk.SignalToNoise, timer.ElapsedMilliseconds(),
                             chunk.Barcodes});
+                        
+                        // Now call variants
+                        if (chunk.Caller != nullptr) {
+                            chunk.Caller->CallCCSVariants(&ai, *chunk.Id.MovieName, chunk.Id.HoleNumber);
+                        }
+                        
                     } catch (const std::exception& e) {
                         result.ExceptionThrown += 1;
                         PBLOG_ERROR << "Skipping " << chunkName << ", caught exception: '"

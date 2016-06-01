@@ -17,6 +17,10 @@ if (NOT Boost_INCLUDE_DIRS)
     find_package(Boost 1.58.0 REQUIRED)
 endif()
 
+if (NOT MonoVC_INCLUDE_DIRS)
+    message(FATAL_ERROR "You must specify the bound mono library before continuing on")
+endif()
+
 if(NOT HTSLIB_INCLUDE_DIRS OR
    NOT HTSLIB_LIBRARIES)
     if(HTSLIB_ROOTDIR)
@@ -127,14 +131,14 @@ endif(HAS_NO_UNUSED_VARIABLE)
 
 if (NOT PBBAM_INCLUDE_DIRS OR
     NOT PBBAM_LIBRARIES)
-    add_subdirectory(${PacBioBAM_RootDir} external/pbbam/build EXCLUDE_FROM_ALL)
+    add_subdirectory(${PacBioBAM_RootDir} external/pbbam/build )
     set(PBBAM_INCLUDE_DIRS ${PacBioBAM_IncludeDir})
     set(PBBAM_LIBRARIES pbbam)
 endif()
 
 if (NOT PBCONSENSUS_INCLUDE_DIRS OR
     NOT PBCONSENSUS_LIBRARIES)
-    add_subdirectory(${PacBioConsensus_RootDir} external/ConsensusCore2/build EXCLUDE_FROM_ALL)
+    add_subdirectory(${PacBioConsensus_RootDir} external/ConsensusCore2/build )
     set(PBCONSENSUS_INCLUDE_DIRS ${PacBioConsensus_IncludeDir})
 endif()
 
